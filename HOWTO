@@ -1,0 +1,69 @@
+based on
+https://medium.com/@asmello/how-to-install-tensorflow-cuda-9-1-into-ubuntu-18-04-b645e769f01d
+
+# prepare dependencies
+sudo apt install nvidia-390 nvidia-cuda-toolkit libcupti-dev gcc-6 python3-numpy python3-dev python3-pip python3-wheel
+
+# download and install
+http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64/libcudnn7-dev_7.1.3.16-1+cuda9.1_amd64.deb
+http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64/libcudnn7_7.1.3.16-1+cuda9.1_amd64.deb
+http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64/libnccl2_2.2.12-1+cuda9.1_amd64.deb
+http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64/libnccl-dev_2.2.12-1+cuda9.1_amd64.deb
+
+# fool broken path detection
+sudo mkdir -p /usr/local/cuda /usr/local/cuda/extras/CUPTI /usr/local/cuda/nvvm
+sudo ln -s /usr/bin /usr/local/cuda/bin
+sudo ln -s /usr/include /usr/local/cuda/include
+sudo ln -s /usr/lib/x86_64-linux-gnu /usr/local/cuda/lib64
+sudo ln -s /usr/local/cuda/lib64 /usr/local/cuda/lib
+sudo ln -s /usr/include /usr/local/cuda/extras/CUPTI/include
+sudo ln -s /usr/lib/x86_64-linux-gnu /usr/local/cuda/extras/CUPTI/lib64
+sudo ln -s /usr/lib/nvidia-cuda-toolkit/libdevice /usr/local/cuda/nvvm/libdevice
+cd /usr/local/cuda
+sudo cp /usr/share/doc/libnccl2/NCCL-SLA.txt.gz 
+sudo gzip -d NCCL-SLA.txt.gz  
+
+# install bazel
+sudo apt install openjdk-8-jdk
+echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee
+/etc/apt/sources.list.d/bazel.list
+curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -
+sudo apt update && sudo apt install bazel
+
+
+# checkout tensorflow
+git clone https://github.com/tensorflow/tensorflow
+cd tensorflow
+./configurer
+
+
+the location of python. [Default is /usr/bin/python]: /usr/bin/python3
+desired Python library path to use.  /usr/local/lib/python3.6/dist-packages
+jemalloc as malloc support? [Y/n]: y
+Google Cloud Platform support? [Y/n]: n
+Hadoop File System support? [Y/n]: n
+Amazon S3 File System support? [Y/n]: n
+Apache Kafka Platform support? [Y/n]: n
+XLA JIT support? [y/N]: y
+GDR support? [y/N]: n
+VERBS support? [y/N]: n
+OpenCL SYCL support? [y/N]: n
+CUDA support? [y/N]: y
+Please specify the CUDA SDK version you want to use: 9.1
+Please specify the location where CUDA 9.1 toolkit path: /usr/local/cuda
+Please specify the cuDNN version you want to use: 7.1
+Please specify the location where cuDNN 7 library is installed.m: /usr/local/cuda
+Do you wish to build TensorFlow with TensorRT support? [y/N]: n
+Please specify the NCCL version you want to use. [Leave empty to default to NCCL 1.3]: 2.2
+Please specify the location where NCCL 2 library is installed. /usr/local/cuda
+Please specify a list of comma-separated Cuda compute capabilities you want to build with. 6.1
+Do you want to use clang as CUDA compiler? [y/N]: n
+Please specify which gcc should be used by nvcc as the host compiler: /usr/bin/gcc-6
+Do you wish to build TensorFlow with MPI support? [y/N]: n
+
+
+# build
+bazel build --config=opt --config=cuda //tensorflow/tools/pip_package:build_pip_package
+bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/tensorflow_pkg
+
+package is in /tmp/tensorflow_pkg/tensorflow*.whl
