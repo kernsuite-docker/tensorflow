@@ -5,7 +5,7 @@ DOCKER_REPO=kernsuite/tensorflow
 all: build
 
 build:
-		docker build --pull -t ${DOCKER_REPO} .
+		docker build --pull --rm -t ${DOCKER_REPO} .
 
 clean:
 	docker rmi ${DOCKER_REPO}
@@ -13,5 +13,23 @@ clean:
 upload: build
 	docker push ${DOCKER_REPO}
 
-run: build
-	docker run --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all -ti ${DOCKER_REPO} bash
+nvidia:
+	docker run \
+		--runtime=nvidia \
+		-e NVIDIA_VISIBLE_DEVICES=all \
+		-ti ${DOCKER_REPO} \
+    	nvidia-smi
+
+tensorflow: 
+	docker run \
+	  --runtime=nvidia \
+	  -e NVIDIA_VISIBLE_DEVICES=all \
+	  -ti ${DOCKER_REPO} \
+	  python3 -c "import tensorflow as t;print(t.Session().run(t.constant('test')))"
+
+bash:
+	docker run \
+	--runtime=nvidia \
+	-e NVIDIA_VISIBLE_DEVICES=all \
+	-ti ${DOCKER_REPO} \
+	bash
