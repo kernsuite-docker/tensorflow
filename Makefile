@@ -10,7 +10,7 @@ build:
 clean:
 	docker rmi ${DOCKER_REPO}
 
-upload: build
+upload: 
 	docker push ${DOCKER_REPO}
 
 nvidia:
